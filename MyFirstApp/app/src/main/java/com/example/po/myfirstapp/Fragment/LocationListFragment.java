@@ -9,9 +9,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.po.myfirstapp.R;
+import com.example.po.myfirstapp.db.City;
+import com.example.po.myfirstapp.db.County;
 import com.example.po.myfirstapp.db.Province;
 import com.example.po.myfirstapp.util.HttpUtil;
 import com.example.po.myfirstapp.util.Utility;
@@ -32,9 +35,18 @@ import okhttp3.Response;
  */
 
 public class LocationListFragment extends Fragment {
+    final int PROVINCELEVEL = 0;
+    final int CITYLEVEL = 1;
+    final int COUNTYLEVEL = 2;
+    int CURRENTLEVEL = 0;
     private RecyclerView mRecyclerView;
     private LocationAdapter mAdapter;
+    private TextView mTitleText;
+    private Province selectedProvince;
+    private City selectedCity;
     private List<Province> provinceList;
+    private List<City> cityList;
+    private List<County> countyList;
     private List<String> dataList = new ArrayList<>();
     // TODO: 2017/10/7 可以用processdialog来实现加载的效果
 
@@ -42,8 +54,8 @@ public class LocationListFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        //return super.onCreateView(inflater, container, savedInstanceState);
         View v = inflater.inflate(R.layout.fragment_location_list,container,false);
+        mTitleText = (TextView) v.findViewById(R.id.title_text);
         mRecyclerView = (RecyclerView) v
                 .findViewById(R.id.crime_recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -56,21 +68,54 @@ public class LocationListFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        //LitePal.getDatabase();
-        //queryProvince();
     }
 
     private void queryProvince(){                                           //先去数据库找 数据库找不到去服务器上找
+        mTitleText.setText("中国");
         provinceList = DataSupport.findAll(Province.class);
         if(provinceList.size()>0){
             dataList.clear();
             for(Province province : provinceList){
-                dataList.add(province.getProvinceName());
+                dataList.add(province.getProvinceName());               //datalist里面保存了数据 最后显示的是datalist的数据
             }
             mAdapter.notifyDataSetChanged();
+            CURRENTLEVEL = PROVINCELEVEL;
         }else {
             String address = "http://guolin.tech/api/china";
             queryFromServer(address,"province");
+        }
+    }
+
+    private void queryCity(){
+        mTitleText.setText(selectedProvince.getProvinceName());
+        cityList = DataSupport.where("provinceId = ?", String.valueOf(selectedProvince.getId())).find(City.class);
+        if(cityList.size()>0){
+            dataList.clear();
+            for(City city : cityList){
+                dataList.add(city.getCityName());               //datalist里面保存了数据 最后显示的是datalist的数据
+            }
+            mAdapter.notifyDataSetChanged();
+            CURRENTLEVEL = CITYLEVEL;
+        }else {
+            String address = "http://guolin.tech/api/china/" + selectedProvince.getProvinceCode();
+            queryFromServer(address,"city");
+        }
+    }
+
+    private void queryCounty(){
+        mTitleText.setText(selectedCity.getCityName());
+        countyList = DataSupport.where("cityId = ?",String.valueOf(selectedCity.getId())).find(County.class);
+        if(countyList.size()>0){
+            dataList.clear();
+            for(County county : countyList){
+                dataList.add(county.getCountyName());               //datalist里面保存了数据 最后显示的是datalist的数据
+            }
+            mAdapter.notifyDataSetChanged();
+            CURRENTLEVEL = COUNTYLEVEL;
+        }else {
+            String address = "http://guolin.tech/api/china/" + selectedProvince.getProvinceCode()
+                    + "/" + selectedCity.getCityCode();
+            queryFromServer(address,"county");
         }
     }
 
@@ -94,9 +139,9 @@ public class LocationListFragment extends Fragment {
                 if("province".equals(type)){
                     result = Utility.handleProvinceResponse(responseText);
                 }else if ("city".equals(type)){
-                    //result = Utility.handleCityResponse(responseText);
+                    result = Utility.handleCityResponse(responseText,selectedProvince.getId());
                 }else if("county".equals(type)){
-
+                    result = Utility.handleCountyResponse(responseText,selectedCity.getId());
                 }
                 if(result){
                     getActivity().runOnUiThread(new Runnable() {
@@ -105,9 +150,9 @@ public class LocationListFragment extends Fragment {
                             if("province".equals(type)){
                                 queryProvince();
                             }else if("city".equals(type)){
-
+                                queryCity();
                             }else if("county".equals(type)){
-
+                                queryCounty();
                             }
                         }
                     });
@@ -123,17 +168,27 @@ public class LocationListFragment extends Fragment {
 
     private class LocationHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
+        private TextView mTextView;
 
         public LocationHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
+            mTextView = itemView.findViewById(R.id.location);
         }
 
         @Override
         public void onClick(View v) {
-            Toast.makeText(getActivity(),
-                    "clicked!", Toast.LENGTH_SHORT)
-                    .show();
+            if(CURRENTLEVEL == PROVINCELEVEL){
+                selectedProvince = provinceList.get(getAdapterPosition());
+                queryCity();
+            }else if(CURRENTLEVEL == CITYLEVEL){
+                selectedCity = cityList.get(getAdapterPosition());
+                queryCounty();
+            }
+        }
+
+        public void bindLocation(String name){
+            mTextView.setText(name);
         }
     }
 
@@ -147,12 +202,12 @@ public class LocationListFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            return 2;
+            return dataList.size();
         }
 
         @Override
         public void onBindViewHolder(LocationHolder holder, int position) {
-
+            holder.bindLocation(dataList.get(position));
         }
     }
 
