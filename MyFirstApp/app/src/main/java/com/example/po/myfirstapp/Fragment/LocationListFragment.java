@@ -4,11 +4,13 @@ import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +44,7 @@ public class LocationListFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private LocationAdapter mAdapter;
     private TextView mTitleText;
+    private ImageButton imgBtn;
     private Province selectedProvince;
     private City selectedCity;
     private List<Province> provinceList;
@@ -56,6 +59,18 @@ public class LocationListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_location_list,container,false);
         mTitleText = (TextView) v.findViewById(R.id.title_text);
+        imgBtn = (ImageButton) v.findViewById(R.id.back_button);
+        imgBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(CURRENTLEVEL == PROVINCELEVEL){
+                }else if(CURRENTLEVEL == CITYLEVEL){
+                    queryProvince();
+                }else if(CURRENTLEVEL == COUNTYLEVEL){
+                    queryCity();
+                }
+            }
+        });
         mRecyclerView = (RecyclerView) v
                 .findViewById(R.id.crime_recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
