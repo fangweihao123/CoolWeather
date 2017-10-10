@@ -5,6 +5,8 @@ import android.text.TextUtils;
 import com.example.po.myfirstapp.db.City;
 import com.example.po.myfirstapp.db.County;
 import com.example.po.myfirstapp.db.Province;
+import com.example.po.myfirstapp.gson.HeWeather;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -85,5 +87,27 @@ public class Utility {
             }
         }
         return false;
+    }
+
+    /**
+     * 处理点击了县城之后所返回的相关县城的天气信息,将返回的JSON信息转化为HeWeather类 在新的activity中使用
+     *
+     */
+    public static HeWeather handleWeatherResponse(String response){
+        HeWeather weather = null;
+        if(!TextUtils.isEmpty(response)){
+            try{
+                JSONObject jsonObject = new JSONObject(response);
+                JSONArray jsonArray = jsonObject.getJSONArray("HeWeather5");
+                String jsonContent = jsonArray.getJSONObject(0).toString();
+                weather = new Gson().fromJson(jsonContent,HeWeather.class);
+                return weather;
+            }catch (Exception e){
+                e.printStackTrace();
+            }finally {
+
+            }
+        }
+        return weather;
     }
 }

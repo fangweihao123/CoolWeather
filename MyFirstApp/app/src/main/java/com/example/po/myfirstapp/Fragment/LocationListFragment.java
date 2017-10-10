@@ -1,6 +1,7 @@
 package com.example.po.myfirstapp.Fragment;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -14,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.po.myfirstapp.Activity.WeatherConditionActivity;
 import com.example.po.myfirstapp.R;
 import com.example.po.myfirstapp.db.City;
 import com.example.po.myfirstapp.db.County;
@@ -47,6 +49,7 @@ public class LocationListFragment extends Fragment {
     private ImageButton imgBtn;
     private Province selectedProvince;
     private City selectedCity;
+    private County selectedCounty;
     private List<Province> provinceList;
     private List<City> cityList;
     private List<County> countyList;
@@ -199,6 +202,10 @@ public class LocationListFragment extends Fragment {
             }else if(CURRENTLEVEL == CITYLEVEL){
                 selectedCity = cityList.get(getAdapterPosition());
                 queryCounty();
+            }else if(CURRENTLEVEL == COUNTYLEVEL){
+                selectedCounty = countyList.get(getAdapterPosition());
+                Intent intent = WeatherConditionActivity.newIntent(getActivity(),selectedCounty.getCountyName());
+                startActivity(intent);
             }
         }
 

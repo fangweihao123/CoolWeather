@@ -19,6 +19,8 @@
         </activity>
         <activity android:name=".Activity.LocationListActivity">
         </activity>
+        <activity android:name=".Activity.WeatherConditionActivity">
+        </activity>
     </application>
 
 </manifest>

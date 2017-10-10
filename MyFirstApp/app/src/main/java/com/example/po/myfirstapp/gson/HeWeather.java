@@ -11,7 +11,7 @@ public class HeWeather {
     public AQI aqi;
     public Basic basic;
     public List<Daily_Forecast> daily_forecast;                 //储存的是接下来几天的天气数据
-    public Hourly_Forecast hourly_forecast;
+    public List<Hourly_Forecast> hourly_forecast;
     public Now now;
     public String status;
     public Suggestion suggestion;
